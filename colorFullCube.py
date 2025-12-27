@@ -62,6 +62,13 @@ class ColorfullCubes:
 
         self.angle_x, self.angle_y, self.angle_z = 0, 0, 0
 
+    def changeZoom(self, zoom):
+        if zoom:
+            self.zoom_factor = min(15, self.zoom_factor + 0.25)
+        else:
+            self.zoom_factor = max(1, self.zoom_factor - 0.25)
+
+
     def rotate_point(self, point, ax, ay, az):
         x, y, z = point
         
@@ -153,12 +160,6 @@ class ColorfullCubes:
             if len(points_set) >= 3:
                 pygame.draw.polygon(surface, self.FACE_COLORS[face_idx], face_points, 0)
                 pygame.draw.polygon(surface, self.WHITE, face_points, 2)
-
-    def changeZoom(self, zoom):
-        if zoom:
-            self.zoom_factor = min(15, self.zoom_factor + 0.5)
-        else:
-            self.zoom_factor = max(1, self.zoom_factor - 0.5)
     
     def get_led_matrices(self):
         # Создаем массивы для 4 перспектив
@@ -193,55 +194,56 @@ class ColorfullCubes:
 
     def runCubes(self):
         running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
                     running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-                    elif event.key == pygame.K_SPACE:
-                        angle_x, angle_y, angle_z = 0, 0, 0
-                    elif event.key == pygame.K_UP:
-                        self.zoom_factor = min(15, self.zoom_factor + 0.5)
-                        print(f"Zoom increased to: {self.zoom_factor}")
-                    elif event.key == pygame.K_DOWN:
-                        self.zoom_factor = max(1, self.zoom_factor - 0.5)
-                        print(f"Zoom decreased to: {self.zoom_factor}")
-            
-            # Обновление вращения
-            self.angle_x += 0.008
-            self.angle_y += 0.01
-            self.angle_z += 0.006
-            
-            # Вращение вершин
-            rotated_vertices = []
-            for vertex in self.vertices:
-                rotated_vertices.append(self.rotate_point(vertex, self.angle_x, self.angle_y, self.angle_z))
-            
-            # Отрисовка на 4 поверхностях
-            for i in range(4):
-                self.draw_cube_on_surface(self.views[i], i, rotated_vertices)
-            
-            # Очистка и вывод на основной экран
-            self.screen.fill((20, 20, 40))
-            self.screen.blit(self.views[0], (0, 0))                     # Front
-            self.screen.blit(self.views[1], (self.WINDOW_SIZE, 0))           # Back
-            self.screen.blit(self.views[2], (0, self.WINDOW_SIZE))           # Left side
-            self.screen.blit(self.views[3], (self.WINDOW_SIZE, self.WINDOW_SIZE)) # Right side
-            
-            # Разделительные линии
-            pygame.draw.line(self.screen, (40, 40, 60), (self.WINDOW_SIZE, 0), (self.WINDOW_SIZE, self.TOTAL_HEIGHT), 2)
-            pygame.draw.line(self.screen, (40, 40, 60), (0, self.WINDOW_SIZE), (self.TOTAL_WIDTH, self.WINDOW_SIZE), 2)
-            
-            # Информация о зуме
-            font = pygame.font.SysFont(None, 20)
-            zoom_text = font.render(f"Zoom: {self.zoom_factor} (UP/DOWN to adjust)", True, (150, 150, 150))
-            self.screen.blit(zoom_text, (10, self.TOTAL_HEIGHT - 25))
-            
-            pygame.display.flip()
-            self.clock.tick(60)
-            self.get_led_matrices()
-            print(self.front_matrix)
+                elif event.key == pygame.K_SPACE:
+                    angle_x, angle_y, angle_z = 0, 0, 0
+                elif event.key == pygame.K_UP:
+                    self.zoom_factor = min(15, self.zoom_factor + 0.5)
+                    print(f"Zoom increased to: {self.zoom_factor}")
+                elif event.key == pygame.K_DOWN:
+                    self.zoom_factor = max(1, self.zoom_factor - 0.5)
+                    print(f"Zoom decreased to: {self.zoom_factor}")
+        
+        # Обновление вращения
+        self.angle_x += 0.008
+        self.angle_y += 0.01
+        self.angle_z += 0.006
+        
+        # Вращение вершин
+        rotated_vertices = []
+        for vertex in self.vertices:
+            rotated_vertices.append(self.rotate_point(vertex, self.angle_x, self.angle_y, self.angle_z))
+        
+        # Отрисовка на 4 поверхностях
+        for i in range(4):
+            self.draw_cube_on_surface(self.views[i], i, rotated_vertices)
+        
+        # Очистка и вывод на основной экран
+        self.screen.fill((20, 20, 40))
+        self.screen.blit(self.views[0], (0, 0))                     # Front
+        self.screen.blit(self.views[1], (self.WINDOW_SIZE, 0))           # Back
+        self.screen.blit(self.views[2], (0, self.WINDOW_SIZE))           # Left side
+        self.screen.blit(self.views[3], (self.WINDOW_SIZE, self.WINDOW_SIZE)) # Right side
+        
+        # Разделительные линии
+        pygame.draw.line(self.screen, (40, 40, 60), (self.WINDOW_SIZE, 0), (self.WINDOW_SIZE, self.TOTAL_HEIGHT), 2)
+        pygame.draw.line(self.screen, (40, 40, 60), (0, self.WINDOW_SIZE), (self.TOTAL_WIDTH, self.WINDOW_SIZE), 2)
+        
+        # Информация о зуме
+        font = pygame.font.SysFont(None, 20)
+        zoom_text = font.render(f"Zoom: {self.zoom_factor} (UP/DOWN to adjust)", True, (150, 150, 150))
+        self.screen.blit(zoom_text, (10, self.TOTAL_HEIGHT - 25))
+        
+        pygame.display.flip()
+        self.clock.tick(60)
+        self.get_led_matrices()
+        print(self.front_matrix)
+
+    def stopCubes(self):
         pygame.quit()
         sys.exit()
