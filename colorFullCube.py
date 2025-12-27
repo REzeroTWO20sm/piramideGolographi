@@ -162,35 +162,47 @@ class ColorfullCubes:
                 pygame.draw.polygon(surface, self.WHITE, face_points, 2)
     
     def get_led_matrices(self):
-        # Создаем массивы для 4 перспектив
-        self.front_matrix = []
-        self.back_matrix = []
-        self.left_matrix = []
-        self.right_matrix = []
-        
-        # Собираем пиксели для front (левый верхний)
-        for y in range(16):
-            for x in range(16):
-                color = self.screen.get_at((x, y))
-                self.front_matrix.append([x, y, (color.r, color.g, color.b)])
-        
-        # Собираем пиксели для back (правый верхний)
-        for y in range(16):
-            for x in range(16, 32):
-                color = self.screen.get_at((x, y))
-                self.back_matrix.append([x - 16, y, (color.r, color.g, color.b)])
-        
-        # Собираем пиксели для left (левый нижний)
-        for y in range(16, 32):
-            for x in range(16):
-                color = self.screen.get_at((x, y))
-                self.left_matrix.append([x, y - 16, (color.r, color.g, color.b)])
-        
-        # Собираем пиксели для right (правый нижний)
-        for y in range(16, 32):
-            for x in range(16, 32):
-                color = self.screen.get_at((x, y))
-                self.right_matrix.append([x - 16, y - 16, (color.r, color.g, color.b)])
+            """Получить матрицы 16x16 из областей 32x32 окна"""
+            # Создаем поверхности 16x16 для каждого вида
+            led_surfaces = []
+            for i in range(4):
+                # Берем соответствующую область из views
+                view = self.views[i]
+                
+                # Создаем поверхность 16x16 и масштабируем в нее вид 32x32
+                led_surface = pygame.Surface((16, 16))
+                pygame.transform.scale(view, (16, 16), led_surface)
+                led_surfaces.append(led_surface)
+
+            # Заполняем матрицы
+            self.front_matrix = []
+            self.back_matrix = []
+            self.left_matrix = []
+            self.right_matrix = []
+
+            # Front (из led_surfaces[0])
+            for y in range(16):
+                for x in range(16):
+                    color = led_surfaces[0].get_at((x, y))
+                    self.front_matrix.append([x, y, (color.r, color.g, color.b)])
+
+            # Back (из led_surfaces[1])
+            for y in range(16):
+                for x in range(16):
+                    color = led_surfaces[1].get_at((x, y))
+                    self.back_matrix.append([x, y, (color.r, color.g, color.b)])
+
+            # Left side (из led_surfaces[2])
+            for y in range(16):
+                for x in range(16):
+                    color = led_surfaces[2].get_at((x, y))
+                    self.left_matrix.append([x, y, (color.r, color.g, color.b)])
+
+            # Right side (из led_surfaces[3])
+            for y in range(16):
+                for x in range(16):
+                    color = led_surfaces[3].get_at((x, y))
+                    self.right_matrix.append([x, y, (color.r, color.g, color.b)])
 
     def runCubes(self):
         running = True
@@ -204,10 +216,8 @@ class ColorfullCubes:
                     angle_x, angle_y, angle_z = 0, 0, 0
                 elif event.key == pygame.K_UP:
                     self.zoom_factor = min(15, self.zoom_factor + 0.5)
-                    print(f"Zoom increased to: {self.zoom_factor}")
                 elif event.key == pygame.K_DOWN:
                     self.zoom_factor = max(1, self.zoom_factor - 0.5)
-                    print(f"Zoom decreased to: {self.zoom_factor}")
         
         # Обновление вращения
         self.angle_x += 0.008
@@ -242,7 +252,6 @@ class ColorfullCubes:
         pygame.display.flip()
         self.clock.tick(60)
         self.get_led_matrices()
-        print(self.front_matrix)
 
     def stopCubes(self):
         pygame.quit()
